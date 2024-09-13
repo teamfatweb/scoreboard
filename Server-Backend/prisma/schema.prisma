@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  email     String   @unique
+  password  String
+  role      String
+  avatar    String?
+  createdAt DateTime @default(now())
+}
+
+model Seller {
+  id           Int       @id @default(autoincrement())
+  name         String    @unique
+  avatar       String?
+  createdAt    DateTime  @default(now())
+  targetAmount Float     @default(0)
+  email        String    @unique
+  archives     Archive[]
+  sales        Sale[]
+  targets      Target[]
+}
+
+model Sale {
+  id        Int      @id @default(autoincrement())
+  amount    Float
+  date      DateTime
+  sellerId  Int
+  seller    Seller   @relation(fields: [sellerId], references: [id])
+}
+
+
+model Archive {
+  id        Int      @id @default(autoincrement())
+  amount    Float
+  date      DateTime
+  sellerId  Int
+  percentage Float 
+  seller    Seller   @relation(fields: [sellerId], references: [id])
+}
+
+
+model Target {
+  id        Int      @id @default(autoincrement())
+  amount    Float
+  createdAt DateTime @default(now())
+  sellerId  Int
+  seller    Seller   @relation(fields: [sellerId], references: [id])
+   @@unique([sellerId, createdAt])
+}
+

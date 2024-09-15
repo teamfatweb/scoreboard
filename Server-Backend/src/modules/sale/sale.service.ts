@@ -165,14 +165,14 @@ const closeSaleMonth = async (currentMonth: Date) => {
       },
     });
 
-    const salesBySeller = sales.reduce((acc, sale) => {
+    const salesBySeller = sales.reduce((acc: Record<number, number>, sale: { sellerId: number; amount: number }) => {
       if (!acc[sale.sellerId]) {
         acc[sale.sellerId] = 0;
       }
       acc[sale.sellerId] += parseFloat(sale.amount.toFixed(2));
       return acc;
     }, {} as Record<number, number>);
-
+    
     const currentTargets = await prisma.target.findMany({
       where: {
         createdAt: {
@@ -181,6 +181,7 @@ const closeSaleMonth = async (currentMonth: Date) => {
         },
       },
     });
+    
 
     for (const target of currentTargets) {
       const totalSales = salesBySeller[target.sellerId] || 0;

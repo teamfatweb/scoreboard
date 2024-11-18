@@ -18,42 +18,53 @@ model User {
 }
 
 model Seller {
-  id           Int       @id @default(autoincrement())
-  name         String    @unique
-  avatar       String?
-  createdAt    DateTime  @default(now())
-  targetAmount Float     @default(0)
-  email        String    @unique
-  archives     Archive[]
-  sales        Sale[]
-  targets      Target[]
+  id            Int       @id @default(autoincrement())
+  name          String    @unique
+  avatar        String?
+  createdAt     DateTime  @default(now())
+  targetAmount  Float     @default(0)
+  email         String    @unique
+  currentTarget Float
+  archives      Archive[]
+  sales         Sale[]
+  targets       Target[]
 }
 
 model Sale {
-  id        Int      @id @default(autoincrement())
-  amount    Float
-  date      DateTime
-  sellerId  Int
-  seller    Seller   @relation(fields: [sellerId], references: [id])
+  id                  Int      @id @default(autoincrement())
+  amount              Float
+  date                DateTime
+  sellerId            Int
+  currentTargetAmount Float
+  seller              Seller   @relation(fields: [sellerId], references: [id])
 }
-
 
 model Archive {
-  id        Int      @id @default(autoincrement())
-  amount    Float
-  date      DateTime
-  sellerId  Int
-  percentage Float 
-  seller    Seller   @relation(fields: [sellerId], references: [id])
+  id         Int      @id @default(autoincrement())
+  amount     Float
+  date       DateTime
+  sellerId   Int
+  percentage Float
+  seller     Seller   @relation(fields: [sellerId], references: [id])
 }
-
 
 model Target {
   id        Int      @id @default(autoincrement())
-  amount    Float
-  createdAt DateTime @default(now())
   sellerId  Int
+  createdAt DateTime @default(now())
+  amount    Float
   seller    Seller   @relation(fields: [sellerId], references: [id])
-   @@unique([sellerId, createdAt])
+
+  @@unique([sellerId, createdAt])
 }
 
+model ChampionData {
+  id             Int      @id @default(autoincrement())
+  year           Int?     
+  markat         String
+  jobSpace       String
+  aMarkDirect    String
+  aMarkPublishing String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}

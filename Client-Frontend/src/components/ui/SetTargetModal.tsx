@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 interface SetTargetModalProps {
   open: boolean;
   onClose: () => void;
-  onUpdate: (newTarget: number) => void;
+  onUpdate: (targetAmount: number, endDate: string) => void; // Keep the name as targetAmount
   initialTarget: number;
   sellerName: string;
 }
@@ -19,21 +19,28 @@ const SetTargetModal: React.FC<SetTargetModalProps> = ({
   initialTarget,
   sellerName,
 }) => {
-  const [newTarget, setNewTarget] = useState<number>(initialTarget);
+  const [targetAmount, setTargetAmount] = useState<number>(initialTarget);
+  const [endDate, setEndDate] = useState<string>("");
 
   useEffect(() => {
-    setNewTarget(initialTarget);
-  }, [initialTarget]);
+    setTargetAmount(initialTarget); // Reset targetAmount when modal opens
+    setEndDate("");
+  }, [initialTarget, open]);
 
   const handleUpdate = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (isNaN(newTarget) || newTarget <= 0) {
+    if (isNaN(targetAmount) || targetAmount <= 0) {
       alert("Please enter a valid target amount.");
       return;
     }
 
-    onUpdate(newTarget);
+    if (!endDate) {
+      alert("Please select an end date for the target period.");
+      return;
+    }
+
+    onUpdate(targetAmount, endDate); // Pass only the targetAmount to onUpdate
     onClose();
   };
 
@@ -56,14 +63,25 @@ const SetTargetModal: React.FC<SetTargetModalProps> = ({
             </div>
           </div>
           <div className="flex gap-2 items-center max-w-2/3">
-            <Label className="w-[80px]">New Target: </Label>
+            <Label className="w-[80px]">Target Amount: </Label>
             <div className="flex-grow">
               <Input
                 type="number"
-                value={newTarget}
+                value={targetAmount}
                 placeholder="5000"
                 className="!ring-0 !ring-offset-0 w-full"
-                onChange={(e) => setNewTarget(Number(e.target.value))}
+                onChange={(e) => setTargetAmount(Number(e.target.value))}
+              />
+            </div>
+          </div>
+          <div className="flex gap-2 items-center max-w-2/3">
+            <Label className="w-[80px]">End Date: </Label>
+            <div className="flex-grow">
+              <Input
+                type="date"
+                value={endDate}
+                className="!ring-0 !ring-offset-0 w-full"
+                onChange={(e) => setEndDate(e.target.value)}
               />
             </div>
           </div>

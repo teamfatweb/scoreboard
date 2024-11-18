@@ -2,6 +2,7 @@ import AppWrapper from "@/app-wrapper";
 import Login from "@/pages/login";
 import Scoreboard from "@/pages/scoreboard";
 import AdminPanel from "@/pages/user-panel";
+import ChampionBoard from "@/pages/championsboard";
 import { createBrowserRouter } from "react-router-dom";
 
 export const router = createBrowserRouter([
@@ -16,6 +17,10 @@ export const router = createBrowserRouter([
   {
     path: "/users",
     element: <AppWrapper element={<AdminPanel />} />,
+  },
+  {
+    path: "/champions-board",
+    element: <AppWrapper element={<ChampionBoard />} />, // New Champion Board route
   },
   {
     path: "/admin",

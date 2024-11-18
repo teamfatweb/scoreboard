@@ -47,6 +47,7 @@ const AdminPanel = () => {
     name: "",
     email: "",
     targetAmount: 0,
+    currentTarget: 0,
     role: "seller",
     password: "",
   });
@@ -109,6 +110,7 @@ const AdminPanel = () => {
           name: "",
           email: "",
           targetAmount: 0,
+          currentTarget: 0,
           password: "",
           role: decodedToken?.role === "superAdmin" ? "admin" : "seller",
         });
@@ -258,6 +260,7 @@ const AdminPanel = () => {
                     {decodedToken?.role === "superAdmin" && <TableHead className="text-center">Email</TableHead>}
                     <TableHead className="text-center">Role</TableHead>
                     <TableHead className="text-center">Target Amount</TableHead>
+                    <TableHead className="text-center">Current Target</TableHead>
                     <TableHead className="text-left">Created At</TableHead>
                     <TableHead className="text-center">Action</TableHead>
                   </TableRow>
@@ -292,6 +295,9 @@ const AdminPanel = () => {
                           </TableCell>
                           <TableCell className="font-medium text-center">
                             {user .targetAmount || "—"}
+                          </TableCell>
+                          <TableCell className="font-medium text-center">
+                            {user .currentTarget || "—"}
                           </TableCell>
                           <TableCell className="font-medium text-left">
                             {dayjs(user.createdAt).format("DD/MM/YYYY")}
@@ -357,6 +363,10 @@ const AdminPanel = () => {
                       <TableCell className="font-semibold">Target</TableCell>
                       <TableCell>$ {selected?.targetAmount}</TableCell>
                     </TableRow>
+                    <TableRow>
+                      <TableCell className="font-semibold">Current target</TableCell>
+                      <TableCell>$ {selected?.targetAmount}</TableCell>
+                    </TableRow>
                   </TableBody>
                 </Table>
               )}
@@ -406,31 +416,8 @@ const AdminPanel = () => {
                 />
               </div>
             </div>
-            {/* {decodedToken?.role === "superAdmin" && <div className="flex gap-2 items-center ">
-              <Label className="w-[140px]">Role</Label>
-              <div className="flex-grow">
-                <Select
-                  onValueChange={(value) => {
-                    if (selected)
-                      setSelected({ ...selected, role: value as Role });
-                  }}
-                >
-                  <SelectTrigger className="w-full !ring-0 !ring-offset-0 ">
-                    <SelectValue
-                      placeholder={
-                        selected?.role === "admin" ? "Admin" : "Seller"
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="seller">Seller</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>} */}
             {(decodedToken?.role === "admin" || (decodedToken?.role === "superAdmin" && selected?.role !== "admin"))&& <div className="flex gap-2 items-center max-w-2/3">
-              <Label className="w-[200px]">Monthly Target: </Label>
+              <Label className="w-[200px]">Current Amount: </Label>
               <div className="flex-grow relative w-full">
               <div className="absolute grid w-5 h-5 place-items-center text-blue-gray-500 top-2/4 right-3 -translate-y-2/4">
                   $
@@ -445,6 +432,28 @@ const AdminPanel = () => {
                       setSelected({
                         ...selected,
                         targetAmount: Number(e.target.value),
+                      });
+                  }}
+                  disabled = {decodedToken?.role === "superAdmin" && selected?.role !== "admin" || decodedToken?.role === "admin"}
+                />
+              </div>
+            </div>}
+            {(decodedToken?.role === "admin" || (decodedToken?.role === "superAdmin" && selected?.role !== "admin"))&& <div className="flex gap-2 items-center max-w-2/3">
+              <Label className="w-[200px]">New Target: </Label>
+              <div className="flex-grow relative w-full">
+              <div className="absolute grid w-5 h-5 place-items-center text-blue-gray-500 top-2/4 right-3 -translate-y-2/4">
+                  $
+                </div>
+                <Input
+                  type="text"
+                  placeholder="0"
+                  className="!ring-0 !ring-offset-0 w-full"
+                  value={selected?.currentTarget || 0}
+                  onChange={(e) => {
+                    if (selected)
+                      setSelected({
+                        ...selected,
+                        currentTarget: Number(e.target.value),
                       });
                   }}
                 />

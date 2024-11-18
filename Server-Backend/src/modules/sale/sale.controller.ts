@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import SaleService from "./sale.service";
+import prisma from "../../utils/client";
 
 class SaleController {
   /**
@@ -58,8 +59,7 @@ class SaleController {
             error: err instanceof Error ? err.message : "An unknown error occurred",
         });
     }
-}
-
+  }
 
   /**
    * Delete a sale
@@ -83,63 +83,36 @@ class SaleController {
     }
   }
 
-  /**
-   * Closes off the current sales month/period and sets new targets for the next period.
-   * @param req
-   * @param res
-   */
-  public async closeSalesMonth(req: Request, res: Response) {
-    const { currentMonth, newTarget, sellerId } = req.body;
-  
+  public async updateTarget(req: Request, res: Response) {
+    const { sellerId, targetAmount } = req.body;
+
     // Input validation
-    if (!currentMonth || !sellerId) {
+    if (!sellerId || typeof sellerId !== 'number' || isNaN(sellerId) || 
+        !targetAmount || typeof targetAmount !== 'number' || targetAmount <= 0) {
       return res.status(400).json({
         status: 400,
-        error: "currentMonth and sellerId are required.",
+        message: 'Invalid input data',
       });
     }
-  
-    // Parse currentMonth to Date object
-    let parsedMonth: Date;
+
     try {
-      parsedMonth = new Date(currentMonth);
-      if (isNaN(parsedMonth.getTime())) {
-        throw new Error("Invalid date format");
-      }
-    } catch (err) {
-      return res.status(400).json({
-        status: 400,
-        error: "Invalid date format.",
+      await prisma.seller.update({
+        where: { id: sellerId },
+        data: { currentTarget: targetAmount },
       });
-    }
-  
-    try {
-      // Close off the current sales period
-      const closedSales = await SaleService.closeSaleMonth(parsedMonth);
-  
-      // Handle newTarget if provided
-      let updatedTarget: any = null;
-      if (newTarget) {
-        updatedTarget = await SaleService.setNewTarget(sellerId, newTarget);
-      }
-  
+
       res.status(200).json({
-        status: 200,
-        message: "Sales period closed and new target set successfully",
-        payload: {
-          closedSales,
-          updatedTarget,
-        },
+        status: 'success',
+        message: 'Target amount updated successfully.',
       });
     } catch (err) {
-      console.error('Error closing sales month:', err); // Log the error with context
+      console.error('Error updating target:', err);
       res.status(500).json({
-        status: 500,
-        error: err instanceof Error ? err.message : "An unknown error occurred",
+        status: 'error',
+        message: err instanceof Error ? err.message : 'An unknown error occurred',
       });
     }
   }
 }  
-
 
 export default SaleController;

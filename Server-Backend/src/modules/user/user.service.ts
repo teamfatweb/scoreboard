@@ -71,10 +71,12 @@ const createUser = async (
   targetAmount: number,
   password: string,
   role: string,
-  avatar: string | null
+  avatar: string | null,
+  currentTarget: number
 ) => {
   try {
     if (role === 'superAdmin' || role === 'admin') {
+      // Hash password for admin/superAdmin
       const hashed = await auth.hashPassword(password);
       const user = await prisma.user.create({
         data: {
@@ -83,6 +85,7 @@ const createUser = async (
           password: hashed,
           role,
           avatar,
+          // 'currentTarget' should not be here if it's not a field in the user model
         },
       });
       return user;
@@ -91,8 +94,9 @@ const createUser = async (
         data: {
           name: name,
           targetAmount: targetAmount,
-          avatar : avatar,
+          avatar: avatar,
           email: email,
+          currentTarget: currentTarget // Assuming 'currentTarget' is a valid field in the seller model
         },
       });
       return seller;
@@ -108,38 +112,44 @@ const createUser = async (
 
 
 
+
 const updateUser = async (
   email: string,
   newName: string,
   targetAmount: number,
+  currentTarget: number,
   role: string
 ) => {
   try {
-    if (role === 'admin') {
-      const user = await prisma.user.updateMany({
-        where: {
-          email,
-        },
-        data: {
-          name: newName,
-        },
-      });
-      return user;
-    } else {
-      const user = await prisma.seller.updateMany({
-        where: {
-          name: newName,
-        },
-        data: {
-          targetAmount,
-        },
-      });
-      return user;
-    }
+
+      if (role === 'admin') {
+          const user = await prisma.user.update({
+              where: {
+                  email,
+              },
+              data: {
+                  name: newName,
+              },
+          });
+          return user;
+      } else {
+          const seller = await prisma.seller.update({
+              where: {
+                  email,
+              },
+              data: {
+                  targetAmount,
+                  currentTarget,
+              },
+          });
+          return seller;
+      }
   } catch (err) {
-    return err;
+      throw new Error('Failed to update user.');
   }
 };
+
+
 
 const deleteUser = async (email: string, role: string) => {
   try {

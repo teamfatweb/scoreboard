@@ -70,9 +70,10 @@ const getUserByName = (name) => __awaiter(void 0, void 0, void 0, function* () {
         throw err; // Rethrow error to be handled by the calling function
     }
 });
-const createUser = (name, email, targetAmount, password, role, avatar) => __awaiter(void 0, void 0, void 0, function* () {
+const createUser = (name, email, targetAmount, password, role, avatar, currentTarget) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (role === 'superAdmin' || role === 'admin') {
+            // Hash password for admin/superAdmin
             const hashed = yield auth_1.default.hashPassword(password);
             const user = yield client_1.default.user.create({
                 data: {
@@ -81,6 +82,7 @@ const createUser = (name, email, targetAmount, password, role, avatar) => __awai
                     password: hashed,
                     role,
                     avatar,
+                    // 'currentTarget' should not be here if it's not a field in the user model
                 },
             });
             return user;
@@ -92,6 +94,7 @@ const createUser = (name, email, targetAmount, password, role, avatar) => __awai
                     targetAmount: targetAmount,
                     avatar: avatar,
                     email: email,
+                    currentTarget: currentTarget // Assuming 'currentTarget' is a valid field in the seller model
                 },
             });
             return seller;
@@ -106,10 +109,10 @@ const createUser = (name, email, targetAmount, password, role, avatar) => __awai
         throw err; // Throw the error to be handled by the calling function
     }
 });
-const updateUser = (email, newName, targetAmount, role) => __awaiter(void 0, void 0, void 0, function* () {
+const updateUser = (email, newName, targetAmount, currentTarget, role) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (role === 'admin') {
-            const user = yield client_1.default.user.updateMany({
+            const user = yield client_1.default.user.update({
                 where: {
                     email,
                 },
@@ -120,19 +123,20 @@ const updateUser = (email, newName, targetAmount, role) => __awaiter(void 0, voi
             return user;
         }
         else {
-            const user = yield client_1.default.seller.updateMany({
+            const seller = yield client_1.default.seller.update({
                 where: {
-                    name: newName,
+                    email,
                 },
                 data: {
                     targetAmount,
+                    currentTarget,
                 },
             });
-            return user;
+            return seller;
         }
     }
     catch (err) {
-        return err;
+        throw new Error('Failed to update user.');
     }
 });
 const deleteUser = (email, role) => __awaiter(void 0, void 0, void 0, function* () {

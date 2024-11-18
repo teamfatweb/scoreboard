@@ -87,8 +87,8 @@
   position: relative;
   background: linear-gradient(135deg, #FFD700, #FFA500);
   /* border-radius: 10px; */
-  padding: 20px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 0 0 4px #FFD700; /* Adding a yellow outline */
+  padding: 2px;
+ 
   color: #fff;
   width: 200px; /* Adjust width as needed */
   height: 100px; /* Adjust height as needed */

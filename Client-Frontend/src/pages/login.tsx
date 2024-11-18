@@ -47,49 +47,48 @@ const Login = () => {
   };
 
   return (
-    <div className="min-w-screen min-h-screen w-full h-full flex justify-center items-center">
-      <Card className="my-10 mr-10 bg-gray-50">
-        <CardHeader className="py-8">
-          <div className="flex gap-4 text-orange-500 flex-col md:flex-row justify-stretch md:justify-start items-start md:items-center">
-            <h2 className="text-2xl font-semibold flex-grow text-center">
-              Login
-            </h2>
-          </div>
-        </CardHeader>
-        <CardContent className="w-full max-w-full min-h-100">
-          <form className="flex flex-col gap-3" onSubmit={submitHandler}>
-            <div className="flex gap-2 items-center max-w-2/3">
-              <Label className="w-[80px]">Email: </Label>
-              <div className="flex-grow">
-                <Input
-                  type="email"
-                  placeholder="JohnDoe@gmail.com"
-                  className="!ring-0 !ring-offset-0 w-full"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="flex gap-2 items-center ">
-              <Label className="w-[80px]">Password</Label>
-              <div className="flex-grow">
-                <Input
-                  type="password"
-                  placeholder="********"
-                  className="!ring-0 !ring-offset-0 w-full"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                  }}
-                  required
-                />
-              </div>
-            </div>
-            <Button className="my-3">Login</Button>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+<div className="min-w-screen min-h-screen flex justify-center items-center bg-gray-900">
+  <Card className="my-10 p-8 bg-white shadow-lg rounded-lg w-full max-w-md">
+    <CardHeader className="text-center mb-6">
+      <h2 className="text-3xl font-semibold text-orange-600">Login</h2>
+    </CardHeader>
+    <CardContent className="w-full">
+      <form className="flex flex-col gap-4" onSubmit={submitHandler}>
+        {/* Email Input */}
+        <div className="flex flex-col">
+          <Label className="text-sm font-medium text-gray-700 mb-2">Email</Label>
+          <Input
+            type="email"
+            placeholder="JohnDoe@gmail.com"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+
+        {/* Password Input */}
+        <div className="flex flex-col">
+          <Label className="text-sm font-medium text-gray-700 mb-2">Password</Label>
+          <Input
+            type="password"
+            placeholder="********"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+
+        {/* Login Button */}
+        <Button className="mt-4 text-white py-2 px-6 rounded-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 transition duration-200">
+          Login
+        </Button>
+      </form>
+    </CardContent>
+  </Card>
+</div>
+
   );
 };
 

@@ -9,20 +9,26 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const client_1 = __importDefault(require("./utils/client"));
 const root_router_1 = __importDefault(require("./root.router"));
 const target_router_1 = __importDefault(require("./modules/sale/target.router"));
+const championboard_routes_1 = __importDefault(require("./modules/championsboard/championboard.routes"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const port = process.env.PORT || 3000;
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
+// Test route
 app.get("/test", (req, res) => {
     res.send("Hello World!");
 });
 app.get("/", (req, res) => {
     res.send("Express on Vercel!");
 });
+// Set up route paths
 app.use("/api/v1", new root_router_1.default().router);
 app.use("/api/v1/target", new target_router_1.default().router);
+app.use("/api/v1/champions", championboard_routes_1.default);
+app.use("/api/v1", championboard_routes_1.default);
+// Database connection and server initialization
 client_1.default.$connect().then(() => {
     console.info("Connected to SQL Database");
     app.listen(port, () => {

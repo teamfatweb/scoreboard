@@ -23,7 +23,7 @@ class TargetService {
                         id: sellerId,
                     },
                     data: {
-                        targetAmount: amount,
+                        currentTarget: amount,
                     }
                 });
             }

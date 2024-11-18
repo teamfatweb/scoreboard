@@ -69,7 +69,7 @@ class UserController {
                     }
                     else {
                         // Create new user
-                        const newUser = yield user_service_1.default.createUser(name, email, Number(targetAmount), password, role, avatar);
+                        const newUser = yield user_service_1.default.createUser(name, email, Number(targetAmount), password, role, avatar, Number(targetAmount));
                         res.status(201).json({
                             status: 201,
                             payload: newUser,
@@ -93,9 +93,9 @@ class UserController {
      */
     updateUser(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { email, name, targetAmount, role } = req.body;
+            const { email, name, targetAmount, currentTarget, role } = req.body;
             try {
-                const updatedUser = yield user_service_1.default.updateUser(email, name, Number(targetAmount), role);
+                const updatedUser = yield user_service_1.default.updateUser(email, name, Number(targetAmount), Number(currentTarget), role);
                 res.status(200).json({
                     status: 200,
                     payload: updatedUser,

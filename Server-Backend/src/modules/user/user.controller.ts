@@ -60,7 +60,8 @@ class UserController {
                     Number(targetAmount),
                     password,
                     role,
-                    avatar
+                    avatar,
+                    Number(targetAmount)
                 );
 
                 res.status(201).json({
@@ -87,12 +88,13 @@ class UserController {
    * @param res
    */
   public async updateUser(req: Request, res: Response) {
-    const { email, name, targetAmount, role } = req.body;
+    const { email, name, targetAmount, currentTarget, role } = req.body;
     try {
       const updatedUser = await UserService.updateUser(
         email,
         name,
         Number(targetAmount),
+        Number(currentTarget),
         role
       );
       res.status(200).json({

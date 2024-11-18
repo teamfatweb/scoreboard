@@ -6,6 +6,7 @@ export interface userData {
   createdAt?: string;
   password?: string;
   targetAmount?: number;
+  currentTarget?: number;
 }
 
 export interface userState {
@@ -15,6 +16,7 @@ export interface userState {
   role: Role;
   password: string;
   targetAmount: number;
+  currentTarget: number;
 }
 
 export type Role = "admin" | "seller" | "superAdmin";

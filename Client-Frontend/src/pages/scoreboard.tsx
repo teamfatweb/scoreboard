@@ -68,19 +68,21 @@ const SalesRepBlock = ({
 }: {
   percent: number;
   completed: boolean;
+  className?: string;
 }) => {
   let colorClass = '';
 
+  // Check conditions to apply color
   if (completed) {
-    if (percent > 100) {
-      colorClass = 'golden-card'; 
-    } else if (percent === 100) {
-      colorClass = 'bg-green-500 outline-green-500/[.2] outline-2 outline-offset-2';
+    if (percent >= 125) {
+      colorClass = 'golden-card'; // Gold when above 125%
+    } else if (percent >= 100) {
+      colorClass = 'bg-green-500 outline-green-500/[.2] outline-2 outline-offset-2'; // Green between 100% and 124%
     } else {
-      colorClass = 'bg-red-500 outline-red-500/[.2]';
+      colorClass = 'bg-red-500 outline-red-500/[.2]'; // Red below 100%
     }
   } else {
-    colorClass = 'bg-gray-500 outline-gray-500/[.2]';
+    colorClass = 'bg-gray-500 outline-gray-500/[.2]'; // Gray if not completed
   }
 
   return (
@@ -92,6 +94,8 @@ const SalesRepBlock = ({
   );
 };
 
+
+
 const SalesReps = ({
   dataSource,
   option,
@@ -101,37 +105,32 @@ const SalesReps = ({
   option: ModeType;
   target: number;
 }) => {
+  // Initialize sales state based on option
   const [sales, setSales] = useState(() =>
     Array.from({ length: option === "weekly" ? 5 : 4 }, () => 0)
   );
 
   useEffect(() => {
-    if (option === "weekly") {
-      const newSales = Array.from({ length: 5 }, () => 0);
+    // Reset sales array based on option
+    const newSales = Array.from({ length: option === "weekly" ? 5 : 4 }, () => 0);
 
-      dataSource.forEach((data) => {
-        const dataDay =
-          (dayjs(data.date).day() - dayjs().startOf("week").day() + 7) % 7;
+    // Process sales data based on selected option
+    dataSource.forEach((data) => {
+      const saleDate = dayjs(data.date);
+      if (option === "weekly") {
+        const dataDay = (saleDate.day() - dayjs().startOf("week").day() + 7) % 7;
         if (dataDay >= 0 && dataDay < newSales.length) {
-          newSales[dataDay] += data.amount;
+          newSales[dataDay] += data.amount; // Aggregate sales for the day
         }
-      });
-      setSales(newSales);
-    }
-
-    if (option === "monthly") {
-      const newSales = Array.from({ length: 4 }, () => 0);
-
-      dataSource.forEach((data) => {
-        const dataWeek =
-          dayjs(data.date).week() - dayjs().startOf("month").week();
+      } else if (option === "monthly") {
+        const dataWeek = saleDate.week() - dayjs().startOf("month").week();
         if (dataWeek >= 0 && dataWeek < newSales.length) {
-          newSales[dataWeek] += data.amount;
+          newSales[dataWeek] += data.amount; // Aggregate sales for the week
         }
-      });
+      }
+    });
 
-      setSales(newSales);
-    }
+    setSales(newSales); // Update state with new sales data
   }, [dataSource, option]);
 
   const currentWeek = dayjs().week() - dayjs().startOf("month").week();
@@ -139,61 +138,187 @@ const SalesReps = ({
 
   return (
     <div className="flex justify-evenly items-center !gap-2">
-      {sales.map((p, i) => (
-        <SalesRepBlock
-          key={i}
-          percent={(p / (option === "weekly" ? target / 20 : target / 5)) * 100}
-          completed={i < (option === "weekly" ? currentDay + 1 : currentWeek)}
-        />
-      ))}
-    </div>
-  );
-};
+      {sales.map((p, i) => {
+        // Calculate percentage based on target
+        const percent = target > 0 ? (p / (option === "weekly" ? target / 20 : target / 4)) * 100 : 0;
 
-const SalesYTD = ({
-  dataSource,
-  target,
-}: {
-  dataSource: DataType[];
-  target: number;
-}) => {
-  const [sales, setSales] = useState(() => Array.from({ length: 12 }, () => 0));
+        // Determine if the current block should be marked as completed
+        const isCompleted = i < (option === "weekly" ? currentDay + 1 : currentWeek);
+        
+        // Define block color based on sales and percentage
+        const blockColor = p === 0
+          ? "bg-gray-500" // No data
+          : percent > 70
+          ? "bg-green-500" // Over 70% achieved
+          : "bg-red-500"; // Below 70% achieved
 
-  const currentMonth = dayjs().month();
-
-  useEffect(() => {
-    const newSales = Array.from({ length: 12 }, () => 0);
-
-    dataSource
-      .filter((data) => dayjs(data.date).year() === dayjs().year())
-      .forEach((data) => {
-        const dataMonth = dayjs(data.date).month();
-        newSales[dataMonth] += data.amount;
-      });
-    setSales(newSales);
-  }, [dataSource]);
-
-  return (
-    <div className="flex items-center justify-between gap-2">
-      {sales.map((sale, i) => {
-        const p = (sale / target) * 100;
         return (
-          <Button
+          <SalesRepBlock
             key={i}
-            className={cn(
-              "!w-4 !h-4 !max-w-4 !min-w-4 !min-h-4 !max-h-4 rounded-none",
-              i <= currentMonth
-                ? p > 70
-                  ? "!bg-green-500 outline-green-500/[.2]"
-                  : "!bg-red-500  outline-red-500/[.2]"
-                : "!bg-gray-500 outline-gray-500/[.2]"
-            )}
+            percent={p === 0 ? 0 : percent} // Default to 0 if no data
+            completed={isCompleted}
+            className={blockColor}
           />
         );
       })}
     </div>
   );
 };
+
+
+
+interface Sale {
+  date: string;
+  amount: number;
+  sellerId: number;
+}
+
+const SalesYTD = ({
+  dataSource,
+  targets,
+}: {
+  dataSource: Sale[];
+  targets: {
+    targetAmount: number;
+    currentTarget: number;
+  };
+}) => {
+  const { targetAmount, currentTarget } = targets;
+  const [salesWithPercentages, setSalesWithPercentages] = useState<
+    { date: string; amount: number; percentage?: string }[]
+  >([]);
+  const currentMonth = dayjs();
+  const currentYear = currentMonth.year();
+  
+  const [selectedSale, setSelectedSale] = useState<{
+    date: string;
+    amount: number;
+    percentage?: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!Array.isArray(dataSource)) {
+      return;
+    }
+
+    // Aggregate sales by month
+    const monthlySales: { [month: string]: number } = {};
+    dataSource.forEach((data) => {
+      const saleMonth = dayjs(data.date).format('YYYY-MM');
+      monthlySales[saleMonth] = (monthlySales[saleMonth] || 0) + data.amount;
+    });
+
+    // Prepare an array for 12 months with percentages
+    const salesDataWithPercentages = Array.from({ length: 12 }, (_, monthIndex) => {
+      const month = dayjs(`${currentYear}-${monthIndex + 1}`, 'YYYY-M');
+      const monthKey = month.format('YYYY-MM');
+      const amount = monthlySales[monthKey] || 0;
+      const isCurrentMonth = month.isSame(currentMonth, 'month');
+      const target = isCurrentMonth ? currentTarget : targetAmount;
+      const percentage = target > 0 ? (amount / target) * 100 : 0;
+
+      return {
+        date: monthKey,
+        amount,
+        percentage: amount > 0 ? `${percentage.toFixed(2)}%` : '',
+      };
+    });
+
+    setSalesWithPercentages(salesDataWithPercentages);
+  }, [dataSource, targets]);
+
+  const handleSaleClick = (sale: { date: string; amount: number; percentage?: string }) => {
+    setSelectedSale(sale);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedSale(null);
+  };
+
+  return (
+    <div>
+      <div className="grid grid-cols-12 gap-2">
+        {salesWithPercentages.map((sale, i) => {
+          const p = parseFloat(sale.percentage || '0');
+
+          // Determine button color
+          const buttonColor =
+            sale.amount === 0
+              ? 'bg-white border-4 border-gray-300 shadow-lg shadow-gray-100/50'
+              : p >= 125
+              ? 'golden-card'
+              : p >= 100
+              ? '!bg-green-500 outline-green-500/[.2]'
+              : '!bg-red-500 outline-red-500/[.2]';
+
+          return (
+            <div className="flex flex-col items-center col-span-1" key={i}>
+              <button
+                className={`!w-8 !h-3 ${buttonColor}`}
+                aria-label={`Sales for month ${sale.date}: ${sale.percentage}`}
+                title={`Sales for month ${sale.date}: ${sale.percentage}`}
+                onClick={() => handleSaleClick(sale)}
+              />
+              <span className="text-xs text-center mt-1">{sale.percentage}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      {selectedSale && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg relative w-96 mx-auto">
+            <button
+              className="absolute top-4 right-4 text-gray-600 hover:text-gray-800 text-2xl"
+              onClick={handleCloseModal}
+              aria-label="Close modal"
+            >
+              &times;
+            </button>
+            <h2 className="text-2xl font-semibold mb-6 text-center text-orange-600">Sale details</h2>
+            
+            <div className="mb-4">
+              <label className="block text-gray-700" htmlFor="sale-date"><strong>Date:</strong></label>
+              <p className="text-gray-600" id="sale-date">{selectedSale.date}</p>
+            </div>
+            
+            <div className="mb-4">
+              <label className="block text-gray-700" htmlFor="sale-amount"><strong>Amount:</strong></label>
+              <p className="text-gray-600" id="sale-amount">${selectedSale.amount.toLocaleString()}</p>
+            </div>
+            
+            {selectedSale.percentage && (
+              <div className="mb-4">
+                <label className="block text-gray-700" htmlFor="sale-percentage"><strong>Percentage:</strong></label>
+                <p className="text-gray-600" id="sale-percentage">{selectedSale.percentage}</p>
+              </div>
+            )}
+            
+            <div className="mt-6">
+              <button
+                className="w-full py-2 px-4 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition duration-200"
+                onClick={handleCloseModal}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+
+
+
+
+
+
+
+
+
 
 const Scoreboard = () => {
   const [openDialog, setOpenDialog] = useState<boolean>(false);
@@ -210,7 +335,7 @@ const Scoreboard = () => {
   const [selectedUser, setSelectedUser] = useState<string>("");
   const [amount, setAmount] = useState<number>(0);
   const [deleteSaleId, setDeleteSaleId] = useState<number | null>(null);
-  const intervalRef = useRef<NodeJS.Timeout>();
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const [createdBy, setCreatedBy] = useState({
     startDate: new Date(),
@@ -277,8 +402,8 @@ const { mutateAsync: addSale, isPending: addingSale } = useMutation({
     });
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Server responded with:", errorText); // Log the server response
-      throw new Error(errorText); // Throw the actual server error text
+      console.error("Server responded with:", errorText);
+      throw new Error(errorText);
     }
     return response.json();
   },
@@ -360,11 +485,6 @@ const handleTargetUpdate = async (newTarget: number) => {
   }
 };
   
-  
-  
-  
-  
-
 
  const {mutateAsync: deleteSale, isPending: removingSale} = useMutation({
     mutationFn: async (data: { id: number }) => {
@@ -437,31 +557,39 @@ const handleTargetUpdate = async (newTarget: number) => {
 
   const changedSelectedUser = (value: string) => {
     setSaleList(data.find((user) => user.user.name === value)?.sale);
-  }
+  };
 
   useEffect(() => {
     fetchData();
     listUsers();
+
     if (!jwt) {
       intervalRef.current = setInterval(() => {
-        if (
-          window.innerHeight + window.scrollY >=
-          document.documentElement.scrollHeight
-        )
-          window.scrollTo(0, 0);
-        window.scrollBy({
-          top: 1,
-          left: 0,
-          behavior: "smooth",
-        });
+        // Check if scrolled to the bottom
+        if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight) {
+          // Switch to Champions Board page by updating window location
+          window.location.href = "/champions-board"; // Replace with the correct path for your Champions Board
+
+          // Clear interval to stop further scrolling
+          clearInterval(intervalRef.current!);
+        } else {
+          // Continue smooth scrolling
+          window.scrollBy({
+            top: 1,
+            left: 0,
+            behavior: "smooth",
+          });
+        }
       }, 100);
 
       // Return cleanup function
       return () => {
-        clearInterval(intervalRef.current);
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+        }
       };
     }
-  }, []);
+  }, [jwt]);
 
   const saleList_custom_picker =  saleList.reduce((carry: any , item:any , index:number)=>{
     var mydate = new Date(item.date);
@@ -541,8 +669,8 @@ const handleTargetUpdate = async (newTarget: number) => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[100px]">Name</TableHead>
-                  <TableHead className="text-center">Weekly</TableHead>
+                  <TableHead className="min-w-[200px] max-w-[300px] text-left">Name</TableHead>
+                  {/* <TableHead className="text-center">Daily</TableHead> */}
                   <TableHead className="text-center">Monthly</TableHead>
                   <TableHead className="text-left">YTD</TableHead>
                 </TableRow>
@@ -555,26 +683,24 @@ const handleTargetUpdate = async (newTarget: number) => {
                     </TableCell>
                   </TableRow>
                 )}
-                {!isFetching &&
+                {!isFetching && (
                   data
                     .filter((name) =>
-                      name.user.name
-                        .toLowerCase()
-                        .includes(filter.toLowerCase())
+                      name.user.name.toLowerCase().includes(filter.toLowerCase())
                     )
-                    // .slice(visibleStart, visibleEnd)
+                    .sort((a, b) => a.user.name.localeCompare(b.user.name)) // Sort alphabetically
                     .map((source, idx) => (
                       <TableRow key={idx} className="py-8">
                         <TableCell className="font-medium">
                           {source.user.name}
                         </TableCell>
-                        <TableCell>
+                        {/* <TableCell>
                           <SalesReps
                             dataSource={source.sale}
                             option="weekly"
                             target={Number(source.user.targetAmount)}
                           />
-                        </TableCell>
+                        </TableCell> */}
                         <TableCell>
                           <SalesReps
                             dataSource={source.sale}
@@ -583,23 +709,24 @@ const handleTargetUpdate = async (newTarget: number) => {
                           />
                         </TableCell>
                         <TableCell>
-                          <SalesYTD
-                            dataSource={source.sale}
-                            target={Number(source.user.targetAmount)}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                {!isFetching &&
-                  data.filter((name) =>
-                    name.user.name.toLowerCase().includes(filter.toLowerCase())
-                  ).length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center">
-                        No Data Found
+                        <SalesYTD
+                          dataSource={source.sale}
+                          targets={{
+                            targetAmount: Number(source.user.targetAmount), // Ensure you're getting the correct value for targetAmount
+                            currentTarget: Number(source.user.currentTarget)  // Use currentTarget for the current month's target
+                          }} 
+                        />
                       </TableCell>
-                    </TableRow>
-                  )}
+                      </TableRow>
+                    ))
+                )}
+                {!isFetching && data.filter((name) => name.user.name.toLowerCase().includes(filter.toLowerCase())).length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center">
+                      No Data Found
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>
